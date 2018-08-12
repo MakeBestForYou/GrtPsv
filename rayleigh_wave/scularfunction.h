@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<math.h>
 #include<complex>
+#include<iostream>
 #include<eigen3/Eigen/Dense>
 using namespace std;
 
@@ -22,15 +23,16 @@ public:
 private:
     model* media;
     FILE* scular_out_fp;
-    float*** E;
+    complex<float>*** E;
 
     complex<float>* v;
     complex<float>* y;
 
-    float*** RT;
-    float*** A;
-    float*** A_u;
-    float*** A_d;
+    complex<float>*** RT;
+    complex<float>*** RT_g;
+    complex<float>*** A;
+    complex<float>*** A_u;
+    complex<float>*** A_d;
 
     float* R_ud;
     float* R_du;
@@ -58,6 +60,8 @@ private:
     void calculate_E(float frequency,float wavenumber);
     void calculate_v_gamma(float frequency,float wavenumber);
     void calculate_A(float depth_z);
+
+    void calculate_RT_g();//compute the general reflect-transfer cofficient
 
 };
 

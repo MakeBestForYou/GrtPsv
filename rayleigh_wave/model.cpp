@@ -79,7 +79,7 @@ void model::conf_read()
     this->N_k = int(fabs(start_k-end_k)/dk+0.5);
     this->k = (float*)(malloc(sizeof(float)*this->N_k));
 
-    for(int i = 0;i<this->N_f;i++)
+    for(int i = 0;i<=this->N_f;i++)
     {
         this->f[i] = start_f+i*df;
         this->w[i] = 2*M_PI*this->f[i];
