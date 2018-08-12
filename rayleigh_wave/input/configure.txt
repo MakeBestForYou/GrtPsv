@@ -1,0 +1,4 @@
+start_frequency	end_frequency d_frequency
+1.0	            1.0	         0.01
+start_wavenumber end_wavenumber d_wavenumber
+1.0		6.2831832	   0.001
