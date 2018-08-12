@@ -10,31 +10,17 @@ ScularFunction::ScularFunction(model* media,char* scular_file)
         printf("can't open scular function file!/n");
         exit(1);
     }
+    this->scular = this->malloc_array1_cf(this->media->N_k);
     this->E = this->malloc_array3_cf(this->media->layer,4,4);
     this->RT = this->malloc_array3_cf(this->media->layer,4,4);
-    this->RT_g = this->malloc_array3_cf(this->media->layer,2,2);
+    this->R_du_g = this->malloc_array3_cf(this->media->layer,2,2);
+    this->R_ud_g = this->malloc_array3_cf(this->media->layer,2,2);
     this->A = this->malloc_array3_cf(this->media->layer,4,4);
     this->A_u = this->malloc_array3_cf(this->media->layer,2,2);
     this->A_d = this->malloc_array3_cf(this->media->layer,2,2);
-    this->v = this->malloc_array1_cf(this->media->N_k);
-    this->y = this->malloc_array1_cf(this->media->N_k);
+    this->v = this->malloc_array1_cf(this->media->layer);
+    this->y = this->malloc_array1_cf(this->media->layer);
 }
-
-/*ScularFunction::ScularFunction(model* media,char* scular_file)
-{
-    this->media = media;
-    if(!(this->scular_out_fp = fopen(scular_file,"w+")))
-    {
-        printf("can't open scular function file!/n");
-        exit(1);
-    }
-    this->E = this->malloc_array3_cfa(this->media->layer,4,4);
-    this->RT = this->malloc_array3_cfa(this->media->layer,4,4);
-    this->A_u = this->malloc_array3_cfa(this->media->layer,2,2);
-    this->A_d = this->malloc_array3_cfa(this->media->layer,2,2);
-    this->v = this->malloc_array1_cf(this->media->N_k);
-    this->y = this->malloc_array1_cf(this->media->N_k);
-}*/
 
 void ScularFunction::calculate_scular(float frequency)
 {
@@ -43,7 +29,27 @@ void ScularFunction::calculate_scular(float frequency)
         //this->calculate_E(frequency,this->media->k[i]);
         this->calculate_R_T(frequency,this->media->k[i]);
         this->calculate_RT_g();
+        this->calculate_Det(i);
     }
+}
+
+void ScularFunction::calculate_Det(int N_k)
+{
+    MatrixXcf R_ud_g_(2,2);
+    MatrixXcf R_du_g_(2,2);
+    MatrixXcf dialog(2,2);
+    dialog<<1,0,0,1;
+    for(int ii = 0;ii<2;ii++)
+        for(int jj = 0;jj<2;jj++)
+        {
+            R_ud_g_(ii,jj) = this->R_ud_g[0][ii][jj];
+            R_du_g_(ii,jj) = this->R_du_g[1][ii][jj];
+        }
+    MatrixXcf tmp(2,2);
+    tmp = dialog-R_ud_g_*R_du_g_;
+//    cout<<tmp.determinant()<<endl;
+//    cout<<R_du_g<<R_ud_g<<endl;
+    this->scular[N_k] =tmp.determinant();
 }
 
 void ScularFunction::calculate_RT_g()
@@ -53,8 +59,57 @@ void ScularFunction::calculate_RT_g()
     MatrixXcf temp_1(2,2);
     MatrixXcf temp_2(2,2);
     MatrixXcf temp_3(2,2);
+    MatrixXcf temp_4(2,2);
+    MatrixXcf temp_5(2,2);
+    MatrixXcf dialog(2,2);
+    MatrixXcf result_R_du_g(2,2);
+    dialog<<1,0,0,1;
+
+    for(int ii = 0;ii<2;ii++)
+        for(int jj = 0;jj<2;jj++)
+        {
+            temp_1(ii,jj) = E[1][ii+2][jj];
+            temp_2(ii,jj) = E[1][ii+2][jj+2];
+            temp_3(ii,jj) = A[1][ii+2][jj+2];
+        }
+    temp_4 = -temp_1.inverse()*temp_2*temp_3;
+//    cout<<"R_ud_g"<<endl;
+//    cout<<temp_4<<endl;
+    for(int ii = 0;ii<2;ii++)
+        for(int jj = 0;jj<2;jj++)
+        {
+            R_ud_g[0][ii][jj] = temp_4(ii,jj);
+        }
 
 
+    for(int i=0;i<media->layer;i++)
+        for(int ii = 0;ii<2;ii++)
+           for(int jj = 0;jj<2;jj++)
+           {
+                R_du_g[i][ii][jj] = RT[i][ii+2][jj];
+            }
+
+    for(int kk = media->layer-2;kk>=1;kk--)
+    {
+        for(int ii = 0;ii<2;ii++)
+            for(int jj = 0;jj<2;jj++)
+            {
+                temp_1(ii,jj) = RT[kk][ii+2][jj];
+                temp_2(ii,jj) = RT[kk][ii+2][jj+2];
+                temp_4(ii,jj) = RT[kk][ii][jj+2];
+                temp_5(ii,jj) = RT[kk][ii][jj];
+                temp_3(ii,jj) = R_du_g[kk+1][ii][jj];
+            }
+        temp_4 = dialog-temp_4*temp_3;
+        result_R_du_g = temp_1 + temp_2*temp_3*temp_4.inverse()*temp_5;
+        for(int ii = 0;ii<2;ii++)
+            for(int jj = 0;jj<2;jj++)
+            {
+                R_du_g[kk][ii][jj] = result_R_du_g(ii,jj);
+            }
+//        cout<<"R_ud_g"<<endl;
+ //       cout<<result_R_du_g<<endl;
+    }
 }
 
 void ScularFunction::calculate_R_T(float frequency, float wavenumber)
@@ -109,7 +164,7 @@ void ScularFunction::calculate_R_T(float frequency, float wavenumber)
 //        cout<<E_matrix_3<<endl;
 
         RT_matrix = E_matrix_3.inverse()*E_matrix_2*temp_matrix;
-        cout<<RT_matrix<<endl;
+//        cout<<RT_matrix<<endl;
         for(int ii = 0;ii<4;ii++)
             for(int jj = 0;jj<4;jj++)
             {
@@ -140,7 +195,7 @@ void ScularFunction::calculate_R_T(float frequency, float wavenumber)
     MatrixXcf temp1(4,4);
     temp1.block(0,0,4,4) = MatrixXcf::Zero(4,4);
     temp1.block(0,0,4,2) = E_matrix_2.inverse() * temp_matrix.block(0,0,4,2);
-    cout<<temp1<<endl;
+//    cout<<temp1<<endl;
     for(int ii = 0;ii<4;ii++)
         for(int jj = 0;jj<4;jj++)
         {
@@ -257,11 +312,11 @@ void ScularFunction::calculate_E(float frequency,float wavenumber)
 
 void ScularFunction::scular_output()
 {
-    for(int i = 0;i<this->scular_N;i++)
+    for(int i = 0;i<this->media->N_k;i++)
     {
-        fprintf(this->scular_out_fp,"%f/t",this->scular[i]);
+        fprintf(this->scular_out_fp,"%f \t",this->scular[i].real());
     }
-    fprintf(this->scular_out_fp,"/n");
+    fprintf(this->scular_out_fp,"\n");
 }
 
 float*** ScularFunction::malloc_array3(int page, int row, int low)

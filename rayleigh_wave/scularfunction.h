@@ -16,7 +16,7 @@ public:
     void scular_output();
 
 public:
-    float* scular;
+    complex<float>* scular;
     float* velocity;
     int scular_N;
 
@@ -29,7 +29,8 @@ private:
     complex<float>* y;
 
     complex<float>*** RT;
-    complex<float>*** RT_g;
+    complex<float>*** R_du_g;
+    complex<float>*** R_ud_g;
     complex<float>*** A;
     complex<float>*** A_u;
     complex<float>*** A_d;
@@ -62,7 +63,7 @@ private:
     void calculate_A(float depth_z);
 
     void calculate_RT_g();//compute the general reflect-transfer cofficient
-
+    void calculate_Det(int N_k);
 };
 
 #endif // SCULARFUNCTION_H
