@@ -1,4 +1,8 @@
 start_frequency	end_frequency d_frequency
-1.0	            1.0	         0.01
+0.6	            0.6	         0.1
 start_wavenumber end_wavenumber d_wavenumber
-1.0		6.2831832	   0.001
+1.0		6.2831832	   0.00001
+mode nubmber
+11
+deviation
+0.0001

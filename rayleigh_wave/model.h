@@ -30,6 +30,14 @@ public:
     int N_k;
     int N_f;
 
+    int N_mode;
+
+    float maxVelocity;
+    float minVelocity;
+
+    float dVelocity;
+    double deviation;
+
 private:
     void model_read();
     void conf_read();

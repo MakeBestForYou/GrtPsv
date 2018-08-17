@@ -11,6 +11,7 @@ ScularFunction::ScularFunction(model* media,char* scular_file)
         exit(1);
     }
     this->scular = this->malloc_array1_cf(this->media->N_k);
+    this->velocity = this->malloc_array1(this->media->N_k);
     this->E = this->malloc_array3_cf(this->media->layer,4,4);
     this->RT = this->malloc_array3_cf(this->media->layer,4,4);
     this->R_du_g = this->malloc_array3_cf(this->media->layer,2,2);
@@ -22,15 +23,53 @@ ScularFunction::ScularFunction(model* media,char* scular_file)
     this->y = this->malloc_array1_cf(this->media->layer);
 }
 
+void ScularFunction::realef_array()
+{
+    this->release_array1_cf(this->scular);
+    this->release_array1(this->velocity);
+    this->release_array3_cf(this->E,this->media->layer,4);
+    this->release_array3_cf(this->RT,this->media->layer,4);
+    this->release_array3_cf(this->R_du_g,this->media->layer,2);
+    this->release_array3_cf(this->R_ud_g,this->media->layer,2);
+    this->release_array3_cf(this->A,this->media->layer,4);
+    this->release_array3_cf(this->A_u,this->media->layer,2);
+    this->release_array3_cf(this->A_d,this->media->layer,2);
+    this->release_array1_cf(this->v);
+    this->release_array1_cf(this->y);
+}
+
 void ScularFunction::calculate_scular(float frequency)
 {
     for(int i = 0;i<this->media->N_k;i++)
     {
-        //this->calculate_E(frequency,this->media->k[i]);
         this->calculate_R_T(frequency,this->media->k[i]);
         this->calculate_RT_g();
         this->calculate_Det(i);
     }
+}
+
+complex<float> ScularFunction::calculate_scular(float frequency,float wavenumber)
+{
+    this->calculate_R_T(frequency,wavenumber);
+    this->calculate_RT_g();
+    return this->calculate_Det();
+}
+
+complex<float> ScularFunction::calculate_Det()
+{
+    MatrixXcf R_ud_g_(2,2);
+    MatrixXcf R_du_g_(2,2);
+    MatrixXcf dialog(2,2);
+    dialog<<1,0,0,1;
+    for(int ii = 0;ii<2;ii++)
+        for(int jj = 0;jj<2;jj++)
+        {
+            R_ud_g_(ii,jj) = this->R_ud_g[0][ii][jj];
+            R_du_g_(ii,jj) = this->R_du_g[1][ii][jj];
+        }
+    MatrixXcf tmp(2,2);
+    tmp = dialog-R_ud_g_*R_du_g_;
+    return tmp.determinant();
 }
 
 void ScularFunction::calculate_Det(int N_k)
@@ -217,9 +256,6 @@ void ScularFunction::calculate_A(float depth_z)
         this->A_u[i][0][1] = 0.0;
         this->A_u[i][1][0] = 0.0;
         this->A_u[i][1][1] = exp(-this->v[i]*(media->depth[i] - z));
-
-
-        int a = 1+2;
     }
     int i = media->layer - 1;
     this->A_d[i][0][0] = exp(-this->y[i]*(z - media->depth[i-1]));
@@ -314,7 +350,7 @@ void ScularFunction::scular_output()
 {
     for(int i = 0;i<this->media->N_k;i++)
     {
-        fprintf(this->scular_out_fp,"%f \t",this->scular[i].real());
+        fprintf(this->scular_out_fp,"%f %f \t",this->velocity[i],this->scular[i].real());
     }
     fprintf(this->scular_out_fp,"\n");
 }

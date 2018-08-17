@@ -44,6 +44,15 @@ void model::model_read()
         fscanf(fp,"%f",&(this->alpha[i]));
         nextline(fp,1);
     }
+    minVelocity = 99999;
+    maxVelocity = -9999;
+    for(int ii=1;ii<this->layer;ii++)
+    {
+        if(minVelocity>belta[ii])
+            minVelocity = belta[ii];
+        if(maxVelocity<belta[ii])
+            maxVelocity = belta[ii];
+    }
 
     fclose(fp);
 }
@@ -71,6 +80,10 @@ void model::conf_read()
     fscanf(fp,"%f",&start_k);
     fscanf(fp,"%f",&end_k);
     fscanf(fp,"%f",&dk);
+    nextline(fp,2);
+    fscanf(fp,"%d",&this->N_mode);
+    nextline(fp,2);
+    fscanf(fp,"%d",&this->deviation);
 
     this->N_f = int(fabs(start_f-end_f)/df+0.5);
     this->f = (float*)(malloc(sizeof(float)*this->N_f));
@@ -84,10 +97,11 @@ void model::conf_read()
         this->f[i] = start_f+i*df;
         this->w[i] = 2*M_PI*this->f[i];
     }
-    for(int i = 0;i<this->N_k;i++)
+    for(int i = 0;i<=this->N_k;i++)
     {
         this->k[i] = start_k+i*dk;
     }
+    this->dVelocity = 0.001;
 
     fclose(fp);
 }

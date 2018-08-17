@@ -7,21 +7,24 @@
 #include<iostream>
 #include<eigen3/Eigen/Dense>
 using namespace std;
-
+using namespace Eigen;
 class ScularFunction
 {
 public:
     ScularFunction(model* media,char* output_file);
     void calculate_scular(float frequency);
+    complex<float> calculate_scular(float frequency,float wavenumber);
     void scular_output();
+    void realef_array();
 
 public:
     complex<float>* scular;
     float* velocity;
     int scular_N;
+    model* media;
 
 private:
-    model* media;
+
     FILE* scular_out_fp;
     complex<float>*** E;
 
@@ -64,6 +67,7 @@ private:
 
     void calculate_RT_g();//compute the general reflect-transfer cofficient
     void calculate_Det(int N_k);
+    complex<float> calculate_Det();
 };
 
 #endif // SCULARFUNCTION_H

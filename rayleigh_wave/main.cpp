@@ -6,6 +6,7 @@
 #include"scularfunction.h"
 #include "calculate_cofficient.h"
 #include "dispersion_io.h"
+#include "dispersioncurve.h"
 
 
 int main()
@@ -16,12 +17,16 @@ int main()
 
     model* media = new model(model_file,conf_file);
     ScularFunction* scular = new ScularFunction(media,scular_file);
-
+    dispersionCurve* dispersion = new dispersionCurve(scular);
     for(int i = 0 ;i<=media->N_f;i++)
     {
-        scular->calculate_scular(media->f[i]);
-        scular->scular_output();
+        cout<<"frequency is:"<<media->f[i]<<endl;
+        dispersion->search_root(media->f[i]);        
+        //scular->calculate_scular(media->f[i]);
+        //scular->scular_output();
     }
+
+
 
     return 0;
 }
